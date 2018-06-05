@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/layout"
+    tools:context=".MainActivity">
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:id="@+id/tvConnectionStatus"
+        android:gravity="center"
+        android:background="@android:color/holo_red_dark"
+        android:text="@string/BT_connection_status"
+        style="@style/connection_status_title"/>
+
+    <SurfaceView
+        android:id="@+id/surfaceView"
+        android:layout_marginTop="40dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <TextView
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/log"
+        android:text="-"
+        android:textColor="#ffffff"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:lines="2"/>
+
+    <Button
+        android:layout_marginTop="45dp"
+        android:id="@+id/recordBtn"
+        android:layout_width="80dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center_horizontal"
+        android:text="Record Start"/>
+
+</FrameLayout>
