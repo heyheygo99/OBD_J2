@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity implements
 
                             // Send Loop Commands
                             time = new Timer();
-                            time.scheduleAtFixedRate(tt, 0, 400);
+                            time.scheduleAtFixedRate(tt, 0, 450);
 
                             thread = new LoggingThread();
                             thread.start();
@@ -244,6 +244,7 @@ public class MainActivity extends AppCompatActivity implements
             iatPre, mafrPre, tpPre, rtsePre, appdPre, appePre, appfPre, elPre = "-";
 
     String timeFile;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -296,7 +297,7 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void onClick(View v) {
 
-                if(!isRecording) {
+                if (!isRecording) {
                     if (mBluetoothAdapter == null) {
                         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                     }
@@ -309,7 +310,7 @@ public class MainActivity extends AppCompatActivity implements
                         queryPairedDevices();
                         setupMonitor();
                     }
-                } else{
+                } else {
                     mRecorder.stop();
                     mRecorder.reset();
                     mRecorder.release();
@@ -326,7 +327,7 @@ public class MainActivity extends AppCompatActivity implements
     void initVideoRecorder() {
         mCamera = Camera.open();
         Camera.Parameters p = mCamera.getParameters();
-        p.setPreviewFpsRange(30000,30000);
+        p.setPreviewFpsRange(30000, 30000);
 //        if(p.isAutoExposureLockSupported())
 //            p.setAutoExposureLock(true);
         mCamera.setParameters(p);
@@ -419,34 +420,22 @@ public class MainActivity extends AppCompatActivity implements
 
         public void run() {
 
-            while (true) {
-//                longitudePre = getPreferences("longitude");
-//                latitudePre = getPreferences("latitude");
-//                altitudePre = getPreferences("altitude");
-//                ectPre = getPreferences("ect");
-//                eRPMPre = getPreferences("eRPM");
-//                vsPre = getPreferences("vs");
-//                fpPre = getPreferences("fp");
-//                iatPre = getPreferences("iat");
-//                mafrPre = getPreferences("mafr");
-//                tpPre = getPreferences("tp");
-//                rtsePre = getPreferences("rtse");
-//                appdPre = getPreferences("appd");
-//                appePre = getPreferences("appe");
-//                appfPre = getPreferences("appf");
-//                elPre = getPreferences("el");
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
 
-                try {
                     // 동작 구현
                     String now = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
                     String time = new SimpleDateFormat("HH:mm:ss").format(new Date());
                     fileName = timeFile + ".txt";
                     WriteTextFile(folderName, fileName, "\r\n" + now + "_" + time + " , " +
                             longitude + ", " + latitude + ", " + altitude + ", " + eRPMPre + vsPre);
+                    Log.d("data  :", "rpm - " + eRPMPre);
                     Thread.sleep(500);
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                Log.d("thread","thread is dead!" );
             }
         }
 
@@ -481,14 +470,13 @@ public class MainActivity extends AppCompatActivity implements
 
     private final void addPermission() {
         // 권한 물어서 권한안되어있으면 권한 셋팅해주기
-        if( ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
                 ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
                 ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
                 ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
-        {
+                ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_COARSE_LOCATION
-            , Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO }, 1);
+                    , Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO}, 1);
         }
     }
 
@@ -582,12 +570,11 @@ public class MainActivity extends AppCompatActivity implements
     protected void onDestroy() {
         super.onDestroy();
 
-        if(time != null)
+        if (time != null)
             time.cancel();
 
-        if(thread != null) {
+        if (thread != null) {
             thread.interrupt();
-            thread.stop();
         }
 
         // Un register receiver
@@ -619,6 +606,13 @@ public class MainActivity extends AppCompatActivity implements
 
         // Unregister EventBus
         EventBus.getDefault().unregister(this);
+        finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
     }
 
     @Override
@@ -814,20 +808,20 @@ public class MainActivity extends AppCompatActivity implements
 //                mSbCmdResp.append("\n");
 //                break;
 
-            case 0: // CMD: 0105, Engine coolant temperature
-                int ect = showEngineCoolantTemperature(buffer);
-                mSbCmdResp.append("R>>");
-                mSbCmdResp.append(buffer);
-                mSbCmdResp.append(" (엔진 냉매 온도 : ");
-                mSbCmdResp.append(ect);
-                mSbCmdResp.append((char) 0x00B0);
-                mSbCmdResp.append("˚C)");
-                mSbCmdResp.append("\n");
-//                savePreferences("ect", ect + ",");
-                ectPre = ect + ", ";
-                break;
+//            case 0: // CMD: 0105, Engine coolant temperature
+//                int ect = showEngineCoolantTemperature(buffer);
+//                mSbCmdResp.append("R>>");
+//                mSbCmdResp.append(buffer);
+//                mSbCmdResp.append(" (엔진 냉매 온도 : ");
+//                mSbCmdResp.append(ect);
+//                mSbCmdResp.append((char) 0x00B0);
+//                mSbCmdResp.append("˚C)");
+//                mSbCmdResp.append("\n");
+////                savePreferences("ect", ect + ",");
+//                ectPre = ect + ", ";
+//                break;
 
-            case 1: // CMD: 010C, EngineRPM
+            case 0: // CMD: 010C, EngineRPM
                 int eRPM = showEngineRPM(buffer);
                 mSbCmdResp.append("R>>");
                 mSbCmdResp.append(buffer);
@@ -839,7 +833,7 @@ public class MainActivity extends AppCompatActivity implements
                 eRPMPre = eRPM + ", ";
                 break;
 
-            case 2: // CMD: 010D, Vehicle Speed
+            case 1: // CMD: 010D, Vehicle Speed
                 int vs = showVehicleSpeed(buffer);
                 mSbCmdResp.append("R>>");
                 mSbCmdResp.append(buffer);
