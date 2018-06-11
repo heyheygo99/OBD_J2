@@ -1,21 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/layout"
     tools:context=".MainActivity">
 
 
     <TextView
+        android:id="@+id/tvConnectionStatus"
+        style="@style/connection_status_title"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:id="@+id/tvConnectionStatus"
+        android:background="@color/colorRed"
         android:gravity="center"
-        android:background="@android:color/holo_red_dark"
-        android:text="@string/BT_connection_status"
-        style="@style/connection_status_title"/>
+        android:text="@string/BT_connection_status" />
 
     <SurfaceView
         android:id="@+id/surfaceView"
@@ -23,24 +22,127 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <TextView
-        android:layout_gravity="bottom"
-        android:layout_marginBottom="20dp"
+
+    <LinearLayout
+        android:id="@+id/viewMother"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/log"
-        android:text="-"
-        android:textColor="#ffffff"
-        android:textSize="20sp"
-        android:gravity="center"
-        android:lines="2"/>
+        android:layout_height="match_parent"
+        android:layout_marginTop="40dp"
+        android:orientation="vertical"
+        android:weightSum="10">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="5"
+            android:orientation="horizontal"
+            android:weightSum="10">
+
+            <TextView
+                android:id="@+id/metaData"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:gravity="center_horizontal"
+                android:textColor="#ffffff"
+                android:textSize="13sp"
+                android:text=""/>
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="4"/>
+
+            <TextView
+                android:gravity="center_horizontal"
+                android:id="@+id/timeValue"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3"
+                android:textSize="13sp"
+                android:textColor="#ffffff"
+                android:text=""/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="5"
+            android:gravity="center_horizontal">
+
+            <LinearLayout
+                android:layout_width="200dp"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal"
+                android:layout_marginBottom="10dp">
+
+                <LinearLayout
+                    android:layout_width="100dp"
+                    android:layout_height="match_parent"
+                    android:gravity="bottom|center_horizontal"
+                    android:orientation="vertical"
+                    >
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="RPM"
+                        android:textSize="12sp"
+                        android:textColor="#ffffff" />
+
+                    <TextView
+                        android:id="@+id/rpmValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="-"
+                        android:textSize="24sp"
+                        android:textColor="#ffffff"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="100dp"
+                    android:layout_height="match_parent"
+                    android:gravity="bottom|center_horizontal"
+                    android:orientation="vertical"
+                    >
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Speed"
+                        android:textSize="12sp"
+                        android:textColor="#ffffff" />
+
+                    <TextView
+                        android:id="@+id/speedValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="-"
+                        android:textSize="24sp"
+                        android:textColor="#ffffff"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
 
     <Button
-        android:layout_marginTop="45dp"
         android:id="@+id/recordBtn"
-        android:layout_width="80dp"
-        android:layout_height="40dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="Record Start"/>
+        android:layout_marginTop="45dp"
+        android:background="@color/colorGreen"
+        android:paddingLeft="1dp"
+        android:paddingRight="1dp"
+        android:text="Record Start"
+        android:textSize="12sp"
+        android:textColor="#ffffff" />
 
 </FrameLayout>

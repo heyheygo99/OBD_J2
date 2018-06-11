@@ -37,6 +37,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -149,29 +150,29 @@ public class MainActivity extends AppCompatActivity implements
 
                         case BluetoothIOGateway.STATE_CONNECTED:
                             mConnectionStatus.setText(getString(R.string.BT_status_connected_to) + " " + mConnectedDeviceName);
-                            mConnectionStatus.setBackgroundColor(Color.GREEN);
+                            mConnectionStatus.setBackgroundColor(getApplicationContext().getResources().getColor(R.color.colorGreen));
 
                             sendOBD2CMD("AT Z");
                             sendOBD2CMD("AT SP 0");
-
+                            Log.e("test0611", "in, BLE Status");
                             initVideoRecorder();
                             startVideoRecorder();
 
+                            Log.e("test0611", "in, video set");
                             // Send Loop Commands
                             time = new Timer();
                             time.scheduleAtFixedRate(tt, 0, 450);
 
                             thread = new LoggingThread();
                             thread.start();
-
-                            recordBtn.setVisibility(View.GONE);
-                            //uiThreadRun();
+                            Log.e("test0611", "in, logging");
+//                            recordBtn.setVisibility(View.GONE);
                             break;
 
                         case BluetoothIOGateway.STATE_LISTEN:
                         case BluetoothIOGateway.STATE_NONE:
                             mConnectionStatus.setText(getString(R.string.BT_status_not_connected));
-                            mConnectionStatus.setBackgroundColor(Color.RED);
+                            mConnectionStatus.setBackgroundColor(getApplicationContext().getResources().getColor(R.color.colorRed));
                             break;
 
                         default:
@@ -224,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements
     double latitude; //위도
     double altitude; //고도
 
-    private static String folderName = Environment.getExternalStorageDirectory().getAbsolutePath() + "/OBDLog/OBD_";
+    private static String folderName;
     private String fileName = "";
 
     LoggingThread thread;
@@ -236,7 +237,6 @@ public class MainActivity extends AppCompatActivity implements
     SurfaceView mSurface = null;
     SurfaceHolder mSurfaceHolder = null;
 
-    TextView logTextView;
     Button recordBtn;
     Timer time;
 
@@ -244,6 +244,10 @@ public class MainActivity extends AppCompatActivity implements
             iatPre, mafrPre, tpPre, rtsePre, appdPre, appePre, appfPre, elPre = "-";
 
     String timeFile;
+
+    TextView fileNameView, timeValueView, rpmValueView, speedValueView;
+    long startTime;
+    LinearLayout viewMother;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -255,10 +259,16 @@ public class MainActivity extends AppCompatActivity implements
         addPermission();
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+        folderName = Environment.getExternalStorageDirectory().getAbsolutePath() + "/OBDLog/OBD_";
         mRecorder = new MediaRecorder();
 
+        fileNameView = (TextView) findViewById(R.id.metaData);
+        timeValueView = (TextView) findViewById(R.id.timeValue);
+        rpmValueView = (TextView) findViewById(R.id.rpmValue);
+        speedValueView = (TextView) findViewById(R.id.speedValue);
+        viewMother = (LinearLayout)findViewById(R.id.viewMother);
+
         mSurface = (SurfaceView) findViewById(R.id.surfaceView);
-        logTextView = (TextView) findViewById(R.id.log);
 
         // LocationManager 객체를 얻어온다
         final LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -296,8 +306,8 @@ public class MainActivity extends AppCompatActivity implements
         recordBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 if (!isRecording) {
+                    Log.e("test0611", "in, isrecodingX");
                     if (mBluetoothAdapter == null) {
                         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                     }
@@ -310,10 +320,55 @@ public class MainActivity extends AppCompatActivity implements
                         queryPairedDevices();
                         setupMonitor();
                     }
+
+                    recordBtn.setText("R.E.C");
+                    recordBtn.setBackgroundColor(getApplicationContext().getResources().getColor(R.color.colorRed));
                 } else {
-                    mRecorder.stop();
-                    mRecorder.reset();
-                    mRecorder.release();
+//                    mRecorder.stop();
+//                    mRecorder.reset();
+//                    mRecorder.release();
+                    Log.e("test0611", "in, isrecordingO");
+                    if (time != null) {
+                        time.cancel();
+                        time = null;
+                    }
+                    if (thread != null) {
+                        thread.interrupt();
+                        thread = null;
+                    }
+
+                    // Un register receiver
+                    if (mReceiver != null) {
+                        unregisterReceiver(mReceiver);
+                        mReceiver = null;
+                    }
+
+                    // Stop scanning if is in progress
+                    cancelScanning();
+
+                    // Stop mIOGateway
+                    if (mIOGateway != null) {
+                        mIOGateway.stop();
+                        mIOGateway = null;
+                    }
+
+                    // Clear StringBuilder
+                    if (mSbCmdResp.length() > 0) {
+                        mSbCmdResp.setLength(0);
+                    }
+
+                    removeAllPreferences();
+
+                    if (isRecording) {
+                        mRecorder.stop();
+                        mRecorder.reset();
+                        mRecorder.release();
+                        mRecorder = null;
+                    }
+
+                    recordBtn.setText("Record Start");
+                    recordBtn.setBackgroundColor(getApplicationContext().getResources().getColor(R.color.colorGreen));
+
                     isRecording = false;
                 }
 
@@ -337,11 +392,13 @@ public class MainActivity extends AppCompatActivity implements
         mSurfaceHolder = mSurface.getHolder();
         mSurfaceHolder.addCallback(this);
         mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        Log.e("test0611", "in, init video");
     }
 
     void startVideoRecorder() {
 
         if (isRecording) {
+            Log.e("test0611", "in, start_isrecording");
             mRecorder.stop();
             mRecorder.release();
             mRecorder = null;
@@ -349,16 +406,20 @@ public class MainActivity extends AppCompatActivity implements
             mCamera.lock();
             isRecording = false;
         } else {
+            isRecording = true;
+            Log.e("test0611", "in, start_is N recording");
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     String now = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
                     timeFile = new SimpleDateFormat("HH_mm_ss").format(new Date());
                     String mFolderName = folderName + now;
+                    startTime = System.currentTimeMillis();
                     File file = new File(mFolderName);
                     if (!file.exists())
                         file.mkdir();
                     try {
+                        Log.e("test0611", "in, try");
                         mRecorder = new MediaRecorder();
                         mCamera.unlock();
                         mRecorder.setCamera(mCamera);
@@ -377,6 +438,7 @@ public class MainActivity extends AppCompatActivity implements
                         mRecorder.setMaxFileSize(0);
                         mRecorder.prepare();
                         mRecorder.start();
+                        Log.e("test0611", "in, start video");
                         isRecording = true;
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -386,28 +448,6 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-
-    /*
-        public void uiThreadRun() {
-            while (true) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        String textValue = "";
-                        try {
-                            textValue = longitudePre + ", " + latitudePre + ", " + altitudePre + ", " + ectPre + eRPMPre + vsPre + fpPre +
-                                    iatPre + mafrPre + tpPre + rtsePre + appdPre + appePre + appfPre + elPre;
-                            // 동작 구현
-                            logTextView.setText(textValue);
-                            Thread.sleep(1000);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-            }
-        }
-    */
     private class LoggingThread extends Thread {
 
         private static final String TAG = "LoggingThread";
@@ -429,7 +469,8 @@ public class MainActivity extends AppCompatActivity implements
                     fileName = timeFile + ".txt";
                     WriteTextFile(folderName, fileName, "\r\n" + now + "_" + time + " , " +
                             longitude + ", " + latitude + ", " + altitude + ", " + eRPMPre + vsPre);
-                    Log.d("data  :", "rpm - " + eRPMPre);
+                    handler.sendEmptyMessage(1);
+
                     Thread.sleep(500);
                 }
             } catch (Exception e) {
@@ -438,6 +479,31 @@ public class MainActivity extends AppCompatActivity implements
                 Log.d("thread","thread is dead!" );
             }
         }
+
+        Handler handler = new Handler(new Handler.Callback(){
+            @Override
+            public boolean handleMessage(Message msg) {
+                if(msg.what == 1) {
+                    long curTime = System.currentTimeMillis();
+                    int timeNow = (int)(curTime - startTime) / 1000;
+                    int sec = timeNow % 60;
+                    int min = timeNow / 60 % 60;
+                    int hour = timeNow / 3600;
+
+                    if (hour != 0)
+                        timeValueView.setText(hour + "h "+ min +"m "+ sec +"s");
+                    else if (min != 0)
+                        timeValueView.setText(min +"m "+ sec +"s");
+                    else
+                        timeValueView.setText(sec +"s");
+                    rpmValueView.setText(eRPMPre);
+                    speedValueView.setText(vsPre);
+                    fileNameView.setText(folderName + "/" + timeFile + ".mp4");
+
+                }
+                return true;
+            }
+        });
 
         //텍스트내용을 경로의 텍스트 파일에 쓰기
         public void WriteTextFile(String foldername, String filename, String contents) {
@@ -603,6 +669,9 @@ public class MainActivity extends AppCompatActivity implements
             mRecorder.release();
             mRecorder = null;
         }
+
+        folderName = "";
+        fileName = "";
 
         // Unregister EventBus
         EventBus.getDefault().unregister(this);
@@ -1232,6 +1301,7 @@ public class MainActivity extends AppCompatActivity implements
         if (mCamera == null) {
             try {
                 mCamera.setPreviewDisplay(mSurfaceHolder);
+                Log.e("test0611", "in, surface");
                 mCamera.startPreview();
             } catch (Exception e) {
                 e.printStackTrace();
